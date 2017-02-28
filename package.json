@@ -27,11 +27,5 @@
     "url": "https://github.com/surmon-china/vue-video-player/issues"
   },
   "homepage": "https://github.com/surmon-china/vue-video-player#readme",
-  "dependencies": {
-    "video.js": "^5.11.7",
-    "videojs-youtube": "^2.1.1",
-    "videojs-vimeo": "^2.0.2",
-    "videojs-contrib-hls": "^3.6.0",
-    "videojs-resolution-switcher": "^0.4.2"
-  }
+  "dependencies": {}
 }

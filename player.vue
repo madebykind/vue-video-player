@@ -1,11 +1,10 @@
 <template>
   <div class="video-player">
-    <video class="video-js vjs-custom-skin" :class="{ 'live': options.live }"></video>
+    <video class="video-js vjs-custom-skin"</video>
   </div>
 </template>
 
 <script>
-  var languages = require('./languages.js')
   export default {
     name: 'video-player',
     data: function () {
@@ -17,12 +16,7 @@
       configs: {
         type: Object,
         default: function () {
-          return {
-            youtube: false,
-            vimeo: false,
-            switcher: true,
-            hls: true
-          }
+          return {};
         }
       },
       options: {
@@ -57,17 +51,11 @@
         // console.log('init build player')
 
         var configs = this.configs
-        if (configs.hls) require('videojs-contrib-hls/dist/videojs-contrib-hls.js')
-        if (configs.youtube) require('videojs-youtube')
-        if (configs.vimeo) require('videojs-vimeo')
-        if (configs.switcher) require('videojs-resolution-switcher')
 
         // init
         var options = this.options
         // start_time
         options.start = options.start || 0
-        // is_live?
-        options.live  = options.live || false
         // player_src
         options.source  = options.source || false
         // playbackRates [0.7, 1.0, 1.5, 2.0]
@@ -114,13 +102,6 @@
           }
         }
 
-        // 直播
-        if (options.live) {
-          controlBar.timeDivider = false
-          controlBar.durationDisplay = false
-          controlBar.currentTimeDisplay = false
-        }
-
         // build player config
         var video_options = {
           'controls': options.controls !== undefined ? options.controls : true,
@@ -133,9 +114,6 @@
           'controlBar': options.controlBar || controlBar,
           'language': options.language || 'en',
           'techOrder': options.techOrder || ['html5', 'flash'],
-          'flash': { hls: { withCredentials: false }},
-          'html5': { hls: { withCredentials: false }},
-          'youtube': { "ytControls": options.ytControls ? Number(options.ytControls) : 0 }
         }
 
         // 添加指定语言
@@ -146,25 +124,18 @@
         var playsinline = options.playsinline
         playsinline && (this.$el.children[0].setAttribute('playsinline', playsinline),this.$el.children[0].setAttribute('webkit-playsinline', playsinline))
 
-        // 是否适用youtube
-        // if (video_options.techOrder.indexOf('youtube') > -1) require('videojs-youtube')
-
         // 非直播情况
-        if (!options.live) {
 
-          // 单独播放资源
-          if (!!options.source.src) {
-            video_options.sources = [options.source]
+        // 单独播放资源
+        if (!!options.source.src) {
+          video_options.sources = [options.source]
 
-          // 多播放源切换
-          } else {
-            video_options.plugins = { videoJsResolutionSwitcher: { default: options.defaultSrcReId, dynamicLabel: true }}
-          }
-
-          // 是否使用播放速度控制
-          var playbackRates = options.playbackRates
-          if (!!playbackRates && !!playbackRates.length) video_options.playbackRates = playbackRates
+        // 多播放源切换
         }
+
+        // 是否使用播放速度控制
+        var playbackRates = options.playbackRates
+        if (!!playbackRates && !!playbackRates.length) video_options.playbackRates = playbackRates
 
         // 实例化播放器
         var _this = this
@@ -172,31 +143,14 @@
         this.player = videojs(this.$el.children[0], video_options, function() {
 
           // 是否应用多版本切换清晰度
-          if (!options.live) {
-            if (!!options.source.length) {
-              this.updateSrc(options.source)
-              this.on('resolutionchange', function(){
-                _this.$emit && _this.$emit(customEventName, { resolutionchange: this.src() })
-                _this.$dispatch && _this.$dispatch(customEventName, { resolutionchange: this.src() })
-              })
-            }
+        
+          if (!!options.source.length) {
+            this.updateSrc(options.source)
+            this.on('resolutionchange', function(){
+              _this.$emit && _this.$emit(customEventName, { resolutionchange: this.src() })
+              _this.$dispatch && _this.$dispatch(customEventName, { resolutionchange: this.src() })
+            })
           }
-
-          if (options.live) {
-
-            // console.log('live video', this, options.source)
-            this.src(options.source)
-
-            // var hls = this.tech({ IWillNotUseThisInPlugins: true }).hls
-            // 直播每次的切片请求
-            /*
-            this.tech_.hls.xhr.beforeRequest = function(options) {
-              console.log(options)
-              return options
-            }
-            */
-          }
-
           // 监听播放
           this.on('play', function() {
             _this.$emit && _this.$emit(customEventName, { play: true })
@@ -217,7 +171,7 @@
 
           // 元文件信息
           this.on('loadeddata', function() {
-            if (!options.live && !!options.start) this.currentTime(options.start)
+            if (!!options.start) this.currentTime(options.start)
             this.muted(_this.options.muted)
             _this.$emit && _this.$emit(customEventName, { loadeddata: true })
             _this.$dispatch && _this.$dispatch(customEventName, { loadeddata: true })
@@ -267,10 +221,8 @@
         if (action == 'play') this.player.play()
         if (action == 'pause') this.player.pause()
         if (action == 'refresh') {
-          if (!this.options.live) {
-            this.player.currentTime(0)
-            this.player.play()
-          }
+          this.player.currentTime(0)
+          this.player.play()
         }
       }
     },
